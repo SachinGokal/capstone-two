@@ -43,7 +43,7 @@ def calibrate_rf_with_sample_of_excluded_subset(df, subject_threshold):
     calibrated_rf = rf_for_subject_subset(new_df, subject_threshold)
 
     # excluded test subset with random sample removed
-    excluded_df = df[df['subject_id'] > subject_threshold].remove(random_sample.index)
+    excluded_df = df[df['subject_id'] > subject_threshold].drop(random_sample.index)
     X_test = excluded_df[COLUMNS_TO_KEEP]
     X_test = StandardScaler().fit_transform(X_test)
     y_test = excluded_df['NasaTLX Label'].values
