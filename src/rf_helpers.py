@@ -28,7 +28,8 @@ def rf_for_subject_subset(df, subject_threshold):
    return clf
 
 def test_rf_on_excluded_subset(clf, subject_threshold):
-    X_test = df[df['subject_id'] > subject_threshold]
+    X_test = df[df['subject_id'] > subject_threshold][COLUMNS_TO_KEEP]
+    X_test = StandardScaler().fit_transform(X_test)
     y_test = df[df['subject_id'] > subject_threshold]['NasaTLX Label'].values
     return accuracy_score(y_test, clf.predict(X_test))
 
