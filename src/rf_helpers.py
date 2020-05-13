@@ -76,66 +76,70 @@ POSSIBLE_COLUMNS = ['HF',
                     'sampen',
                     'NasaTLX Label']
 
-COLUMNS_TO_KEEP = ['HF',
-                   'HF_BOXCOX',
-                   'HF_LF',
-                   'HF_NU',
-                   'HF_PCT',
-                   'HR',
-                   'HR_HF',
-                   'HR_LF',
-                   'HR_SQRT',
-                   'LF',
-                   'LF_BOXCOX',
-                   'LF_HF',
-                   'LF_NU',
-                   'LF_PCT',
-                   'MEAN_RR',
-                   'MEDIAN_RR',
-                   'RMSSD',
-                   'RMSSD_LOG',
-                   'RMSSD_SQUARED',
-                   'RMSSD_REL_RR',
-                   'SD1_BOXCOX',
-                   'SDRR',
-                   'SDRR_RMSSD',
-                   'SDRR_RMSSD_REL_RR',
-                   'SDSD',
-                   'TP',
-                   'VLF',
-                   'VLF_PCT',
-                   'pNN25',
-                   'pNN50']
+# Top 31 Features were kept
+COLUMNS_TO_KEEP =  ['RMSSD',
+                    'SDRR_REL_RR',
+                    'SD2_LF',
+                    'SD1_LOG',
+                    'SDSD',
+                    'SDRR',
+                    'HR_SQRT',
+                    'LF_PCT',
+                    'SD2',
+                    'HF_LOG',
+                    'HR',
+                    'SDRR_RMSSD_LOG',
+                    'SDRR_RMSSD',
+                    'VLF_PCT',
+                    'HF_PCT',
+                    'higuci',
+                    'MEDIAN_RR',
+                    'HF',
+                    'MEAN_RR_SQRT',
+                    'MEAN_RR',
+                    'HF_VLF',
+                    'MEAN_RR_LOG',
+                    'HF_BOXCOX',
+                    'RMSSD_REL_RR',
+                    'SDSD_REL_RR_LOG',
+                    'HR_HF',
+                    'RMSSD_REL_RR_LOG',
+                    'SDSD_REL_RR',
+                    'SDRR_RMSSD_REL_RR',
+                    'SD1_BOXCOX',
+                    'LF_BOXCOX',
+                    'NasaTLX Label']
 
-RF_GRID = {'n_estimators': [100, 250, 500, 1000], 'max_depth': [2, 3]}
+RF_GRID = {'n_estimators': [100, 250], 'max_depth': [2, 3]}
 
 def random_included_and_excluded_df(df, total_excluded=5):
-    random_subject_ids = np.random.choice(df['subject_id'].unique(), total_excluded)
+    random_subject_ids = np.random.choice(df['subject_id'].unique(), total_excluded, replace=False)
+    print(random_subject_ids)
     excluded_df = df[df['subject_id'].isin(
-        random_subject_ids)][POSSIBLE_COLUMNS]
+        random_subject_ids)]
     included_df = df[~df['subject_id'].isin(
-        random_subject_ids)][POSSIBLE_COLUMNS]
+        random_subject_ids)]
     return included_df, excluded_df
 
 # NasaTLX label is low, medium, high which is the mapping done in the study
 def rf_for_subject_subset(included_df):
-   X = included_df.drop(columns='NasaTLX Label')
+   X = included_df[COLUMNS_TO_KEEP].drop(columns='NasaTLX Label')
    X = StandardScaler().fit_transform(X)
    y = included_df['NasaTLX Label'].values
    X_train, X_test, y_train, y_test = train_test_split(X, y)
    clf = GridSearchCV(RandomForestClassifier(), RF_GRID)
    clf.fit(X_train, y_train)
    print(f'Accuracy Score for Included Subset: {accuracy_score(y_test, clf.predict(X_test))}')
-   return clf
+   return clf, X_train, X_test, y_train, y_test
 
 def test_rf_on_excluded_subset(clf, excluded_df):
-    X_test = excluded_df.drop(columns='NasaTLX Label')
+    X_test = excluded_df[COLUMNS_TO_KEEP].drop(columns='NasaTLX Label')
     X_test = StandardScaler().fit_transform(X_test)
     y_test = excluded_df['NasaTLX Label'].values
     print(f'Accuracy Score for Excluded Subset without Calibration: {accuracy_score(y_test, clf.predict(X_test))}')
 
 def combined_included_excluded_without_calibration(included_df, excluded_df):
-    clf = rf_for_subject_subset(included_df)
+    clf = rf_for_subject_subset(included_df)[0]
     test_rf_on_excluded_subset(clf, excluded_df)
 
 # Default sample set to around 6.25% of data
@@ -148,26 +152,20 @@ def calibrated_rf_with_sample_of_excluded_subset(included_df, excluded_df, sampl
         # remove random sample from excluded subset
         excluded_df.drop(random_sample.index, inplace=True)
 
-    calibrated_rf = rf_for_subject_subset(included_df)
-    X_test = excluded_df.drop(columns='NasaTLX Label')
+    calibrated_rf = rf_for_subject_subset(included_df)[0]
+    X_test = excluded_df[COLUMNS_TO_KEEP].drop(columns='NasaTLX Label')
     X_test = StandardScaler().fit_transform(X_test)
     y_test = excluded_df['NasaTLX Label'].values
     print(
         f'Accuracy Score for Excluded Subset with Calibrated RF: {accuracy_score(y_test, calibrated_rf.predict(X_test))}')
     return calibrated_rf
 
-def test_on_validation_df(validation_df):
-    X_test = validation_df[POSSIBLE_COLUMNS].drop(columns='NasaTLX Label')
-    X_test = StandardScaler().fit_transform(X_test)
-    y_test = validation_df['NasaTLX Label'].values
-    print(f'Accuracy Score for Validation Subset without Calibration: {accuracy_score(y_test, clf.predict(X_test))}')
-
 def rf_predictions_for_each_subject(df):
     predictions = []
     for i in df['subject_id'].unique():
         subject_df = df[df['subject_id'] == i]
         X = subject_df
-        X = X[POSSIBLE_COLUMNS]
+        X = X[COLUMNS_TO_KEEP]
         X = StandardScaler().fit_transform(X)
         y = subject_df['NasaTLX Label'].values
         X_train, X_test, y_train, y_test = train_test_split(X, y)
