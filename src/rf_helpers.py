@@ -9,66 +9,168 @@ from sklearn.metrics import (
 )
 from sklearn.model_selection import train_test_split, GridSearchCV
 
-POSSIBLE_COLUMNS = ['MEAN_RR', 'MEDIAN_RR', 'SDRR', 'RMSSD', 'SDSD', 'SDRR_RMSSD', 'HR',
-                    'pNN25', 'pNN50', 'SD1', 'SD2', 'KURT', 'SKEW', 'MEAN_REL_RR',
-                    'MEDIAN_REL_RR', 'SDRR_REL_RR', 'RMSSD_REL_RR', 'SDSD_REL_RR',
-                    'SDRR_RMSSD_REL_RR', 'KURT_REL_RR', 'SKEW_REL_RR', 'VLF', 'VLF_PCT',
-                    'LF', 'LF_PCT', 'LF_NU', 'HF', 'HF_PCT', 'HF_NU', 'TP', 'LF_HF',
-                    'HF_LF', 'sampen', 'higuci', 'MEAN_RR_LOG',
-                    'MEAN_RR_SQRT', 'TP_SQRT', 'MEDIAN_REL_RR_LOG', 'RMSSD_REL_RR_LOG',
-                    'SDSD_REL_RR_LOG', 'VLF_LOG', 'LF_LOG', 'HF_LOG', 'TP_LOG', 'LF_HF_LOG',
-                    'RMSSD_LOG', 'SDRR_RMSSD_LOG', 'pNN25_LOG', 'pNN50_LOG', 'SD1_LOG',
-                    'KURT_YEO_JONSON', 'SKEW_YEO_JONSON', 'MEAN_REL_RR_YEO_JONSON',
-                    'SKEW_REL_RR_YEO_JONSON', 'LF_BOXCOX', 'HF_BOXCOX', 'SD1_BOXCOX',
-                    'KURT_SQUARE', 'HR_SQRT', 'MEAN_RR_MEAN_MEAN_REL_RR', 'SD2_LF', 'HR_LF',
-                    'HR_HF', 'HF_VLF']
+POSSIBLE_COLUMNS = ['HF',
+                    'HF_BOXCOX',
+                    'HF_LF',
+                    'HF_LOG',
+                    'HF_NU',
+                    'HF_PCT',
+                    'HF_VLF',
+                    'HR',
+                    'HR_HF',
+                    'HR_LF',
+                    'HR_SQRT',
+                    'KURT',
+                    'KURT_REL_RR',
+                    'KURT_SQUARE',
+                    'KURT_YEO_JONSON',
+                    'LF',
+                    'LF_BOXCOX',
+                    'LF_HF',
+                    'LF_HF_LOG',
+                    'LF_LOG',
+                    'LF_NU',
+                    'LF_PCT',
+                    'MEAN_REL_RR',
+                    'MEAN_REL_RR_YEO_JONSON',
+                    'MEAN_RR',
+                    'MEAN_RR_LOG',
+                    'MEAN_RR_MEAN_MEAN_REL_RR',
+                    'MEAN_RR_SQRT',
+                    'MEDIAN_REL_RR',
+                    'MEDIAN_REL_RR_LOG',
+                    'MEDIAN_RR',
+                    'RMSSD',
+                    'RMSSD_LOG',
+                    'RMSSD_SQUARED',
+                    'RMSSD_REL_RR',
+                    'RMSSD_REL_RR_LOG',
+                    'SD1',
+                    'SD1_BOXCOX',
+                    'SD1_LOG',
+                    'SD2',
+                    'SD2_LF',
+                    'SDRR',
+                    'SDRR_REL_RR',
+                    'SDRR_RMSSD',
+                    'SDRR_RMSSD_LOG',
+                    'SDRR_RMSSD_REL_RR',
+                    'SDSD',
+                    'SDSD_REL_RR',
+                    'SDSD_REL_RR_LOG',
+                    'SKEW',
+                    'SKEW_REL_RR',
+                    'SKEW_REL_RR_YEO_JONSON',
+                    'SKEW_YEO_JONSON',
+                    'TP',
+                    'TP_LOG',
+                    'TP_SQRT',
+                    'VLF',
+                    'VLF_LOG',
+                    'VLF_PCT',
+                    'higuci',
+                    'pNN25',
+                    'pNN25_LOG',
+                    'pNN50',
+                    'pNN50_LOG',
+                    'sampen']
 
-COLUMNS_TO_KEEP = ['MEAN_RR', 'MEDIAN_RR', 'SDRR',
-                   'RMSSD', 'RMSSD_LOG', 'SDSD', 'SDRR_RMSSD', 'pNN25', 'pNN50',
-                   'HR']
+COLUMNS_TO_KEEP = ['HF',
+                   'HF_BOXCOX',
+                   'HF_LF',
+                   'HF_NU',
+                   'HF_PCT',
+                   'HR',
+                   'HR_HF',
+                   'HR_LF',
+                   'HR_SQRT',
+                   'LF',
+                   'LF_BOXCOX',
+                   'LF_HF',
+                   'LF_NU',
+                   'LF_PCT',
+                   'MEAN_RR',
+                   'MEDIAN_RR',
+                   'RMSSD',
+                   'RMSSD_LOG',
+                   'RMSSD_SQUARED',
+                   'RMSSD_REL_RR',
+                   'SD1_BOXCOX',
+                   'SDRR',
+                   'SDRR_RMSSD',
+                   'SDRR_RMSSD_REL_RR',
+                   'SDSD',
+                   'TP',
+                   'VLF',
+                   'VLF_PCT',
+                   'pNN25',
+                   'pNN50']
 
-def rf_grid():
-    return {'n_estimators': [100, 250, 500], 'max_depth': [2, 3]}
+RF_GRID = {'n_estimators': [100, 250, 500, 1000], 'max_depth': [2, 3]}
 
-def rf_for_subject_subset(df, subject_threshold):
-   included_df = df[df['subject_id'] <= subject_threshold]
+def random_included_and_excluded_df(df, total_excluded=5):
+    random_subject_ids = np.random.choice(df['subject_id'].unique(), total_excluded)
+    excluded_df = df[df['subject_id'].isin(random_subject_ids)]
+    included_df = df[~df['subject_id'].isin(random_subject_ids)]
+    return included_df, excluded_df
+
+# NasaTLX label is low, medium, high which is the mapping done in the study
+def rf_for_subject_subset(included_df):
    X = included_df
    X = X[COLUMNS_TO_KEEP]
    X = StandardScaler().fit_transform(X)
    y = included_df['NasaTLX Label'].values
    X_train, X_test, y_train, y_test = train_test_split(X, y)
-   clf = GridSearchCV(rf, rf_grid())
+   clf = GridSearchCV(RandomForestClassifier(), RF_GRID)
    clf.fit(X_train, y_train)
    print(f'Accuracy Score for Included Subset: {accuracy_score(y_test, clf.predict(X_test))}')
    return clf
 
-def test_rf_on_excluded_subset(clf, subject_threshold):
-    excluded_df = df[df['subject_id'] > subject_threshold]
+def test_rf_on_excluded_subset(clf, excluded_df):
     X_test = excluded_df[COLUMNS_TO_KEEP]
     X_test = StandardScaler().fit_transform(X_test)
     y_test = excluded_df['NasaTLX Label'].values
-    print('Accuracy Score for Excluded Subset')
-    return accuracy_score(y_test, clf.predict(X_test))
+    print(f'Accuracy Score for Excluded Subset without Calibration: {accuracy_score(y_test, clf.predict(X_test))}')
 
-def calibrate_rf_with_sample_of_excluded_subset(df, subject_threshold, samples_per_subject):
-    subset_df = df[df['subject_id'] <= subject_threshold]
-    excluded_df = df[df['subject_id'] > subject_threshold]
-    copy_of_excluded_df = excluded_df.copy()
-    random_samples_idxs = []
+def combined_included_excluded_without_calibration(included_df, excluded_df):
+    clf = rf_for_subject_subset(included_df)
+    test_rf_on_excluded_subset(excluded_df)
 
-    for i in copy_of_excluded_df['subject_id'].unique():
+# Default sample set to around 6.25% of data
+# This is not a great method to calibrate given sampled datapoints will be correlated with excluded datapoints
+# Ideally this should be done with fresh data points through a cycle of scenarios early in the prediction process
+def calibrated_rf_with_sample_of_excluded_subset(included_df, excluded_df, samples_per_subject=1000):
+    for i in excluded_df['subject_id'].unique():
         random_sample = df[df['subject_id'] == i].sample(n=samples_per_subject)
-        random_samples_idxs.append(random_sample.index)
-        subset_df = pd.concat([subset_df, random_sample])
+        included_df = pd.concat([included_df, random_sample])
+        # remove random sample from excluded subset
+        excluded_df.drop(random_sample.index, inplace=True)
 
-    calibrated_rf = rf_for_subject_subset(subset_df, subject_threshold)
-    # remove random sample from excluded df for test
-    print(f'TOTAL IDXS: {len(np.array(random_samples_idxs).flatten())}')
-    excluded_df = excluded_df.drop(np.array(random_samples_idxs).flatten())
-
+    calibrated_rf = rf_for_subject_subset(included_df)
     X_test = excluded_df[COLUMNS_TO_KEEP]
     X_test = StandardScaler().fit_transform(X_test)
     y_test = excluded_df['NasaTLX Label'].values
     print(
-        f'Accuracy Score for Excluded Subset: {accuracy_score(y_test, calibrated_rf.predict(X_test))}')
+        f'Accuracy Score for Excluded Subset with Calibrated RF: {accuracy_score(y_test, calibrated_rf.predict(X_test))}')
     return calibrated_rf
+
+def test_on_validation_df(validation_df):
+    X_test = validation_df[COLUMNS_TO_KEEP]
+    X_test = StandardScaler().fit_transform(X_test)
+    y_test = validation_df['NasaTLX Label'].values
+    print(f'Accuracy Score for Validation Subset without Calibration: {accuracy_score(y_test, clf.predict(X_test))}')
+
+def rf_predictions_for_each_subject(df):
+    predictions = []
+    for i in df['subject_id'].unique():
+        subject_df = df[df['subject_id'] == i]
+        X = subject_df
+        X = X[COLUMNS_TO_KEEP]
+        X = StandardScaler().fit_transform(X)
+        y = subject_df['NasaTLX Label'].values
+        X_train, X_test, y_train, y_test = train_test_split(X, y)
+        clf = GridSearchCV(RandomForestClassifier(), RF_GRID)
+        clf.fit(X_train, y_train)
+        predictions.append(clf.predict(X_test))
+        print(f'Accuracy Score for Included Subject {i}: {accuracy_score(y_test, clf.predict(X_test))}')
+    return predictions
