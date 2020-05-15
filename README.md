@@ -50,10 +50,6 @@ Running a Random Forest with HR and HRV trained just for each individual subject
 
 Clearly the model performs better on individual subjects, but the high scores for individual participants are likely a result of the data points for HR and HRV being highly correlated for the 3 experiment conditions. There does seem to be a clear pattern in differences of these values for various conditions.
 
-To get a better understanding of the differences between subjects, I used KMeans clustering with 22 total clusters to determine how much variation there was when clustering subjects. Silhouette scores continue to go up for all 22 clusters indicating that each subject could be represented by a new cluster.
-
-![Silhouette plot for 22 clusters](plots/silhouette/Silhouette22clusters.png)
-
 Given the strong variance in data among subjects, it's clear that a generalized model would not work well for a new set of subjects. I changed my approach to exclude 5 subjects from the data for training a new model and testing the model on both included and excluded sets of subjects. For efficiency reasons, I included 32 computed features based on an initial Random Forest that was run, including about half of the most important features.
 
 <strong>Accuracy Score for included subset:</strong> 0.7267839333978927
