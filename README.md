@@ -2,7 +2,7 @@
 
 This project was to explore whether heart rate variability data can predict stress. After seeing heart rate variability data being calculated by my fitness tracker, I was interested in interpreting the values and learned that HRV can be used as an indicator of a stressful state. HRV has an inverse relationship with stress in that low HRV can mean higher stress and higher HRV can indicate lower stress ([source](https://www.health.harvard.edu/blog/heart-rate-variability-new-way-track-well-2017112212789)). HRV can be measured as the variance in time between heartbeats for a specific interval. A more detailed definition can be found in this [resource](https://www.heartmath.org/research/science-of-the-heart/heart-rate-variability/).
 
-I came across a research paper on the subject(["The Effect of Person-Specific Biometrics in Improving Generic Stress Predictive Models"](https://www.health.harvard.edu/blog/heart-rate-variability-new-way-track-well-2017112212789)) which did an analysis of stress prediction using the dataset from the SWELL experiment in 2012. The SWELL dataset involved 25 subjects undergoing activities that were categorized as "no stress", "time pressure", and "interruption". In addition to other data points, the subjects' heart rate and heart rate variability were calculated during the study. Each subject had approximately 3 hours of data and the researchers provided computed Heart Rate and Heart Rate Variability statistics, including normalized versions of these statistics using sophisticated techniques beyond my understanding. 3 subjects were not included due to missing data.
+I came across a research paper on the subject (["The Effect of Person-Specific Biometrics in Improving Generic Stress Predictive Models"](https://www.health.harvard.edu/blog/heart-rate-variability-new-way-track-well-2017112212789)) which did an analysis of stress prediction using the dataset from the SWELL experiment in 2012. The SWELL dataset involved 25 subjects undergoing activities that were categorized as "no stress", "time pressure", and "interruption". In addition to other data points, the subjects' heart rate and heart rate variability were calculated during the study. Each subject had approximately 3 hours of data and the researchers provided computed Heart Rate and Heart Rate Variability statistics, including normalized versions of these statistics using sophisticated techniques beyond my understanding. 3 subjects were not included due to missing data.
 
 In addition, the subjects' own interpretation of their stress level was calculated from a questionnaire (Nasa TLX) taken after these activities, and the score was then mapped to 0, 1, 2 (low, medium, high). These scores were used as a measure of stress and cognitive workload. This is detailed more in-depth in the paper referenced above. The datasets included for this analysis are from the following Kaggle links:
 
@@ -18,25 +18,23 @@ Given the nonlinear nature of heart rate data, I focused on using Random Forest 
 
 ### Dataset
 
-The researchers provided multiple datasets in processed and unprocessed formats. The unprocessed dataset consisted of 1 minute data points for each participant. The processed dataset was missing the Nasa TLX scores and computed features. The datasets with computed HR and HRV statistics, appeared to be generated from the raw ECG signal of the subjects, and had a richer set of features.
+The researchers provided multiple datasets in processed and unprocessed formats. The unprocessed dataset consisted of 1 minute data points for each participant. The unprocessed dataset was missing the Nasa TLX scores and computed features. The datasets with computed HR and HRV statistics, appeared to be generated from the raw ECG signal of the subjects, and had a richer set of features.
 
 The processed dataset also included the Nasa TLX labels, used for the classification models in this project. In addition, given the guidance provided in the dataset summaries, better results could be generated from the richer dataset. The researchers provided a train, validation, and test dataset. For this analysis, I combined all datasets resulting in 18,000 data points per subject and split with Sklearn's test, train split. Grid Search cross validation was used for training, though I kept max_depth parameters low at 2/3 to minimize variance in results. Total estimators was set to 100/250 for efficiency in this project.
 
 ### EDA
 
-Histograms of HR and HRV for the participants:
+Histograms of HR and HRV for the participants indicate that there are significant differences in the distributions of HR and HRV data among subjects.
 
 ![Heart Rate Histogram](plots/histogram/HeartRateHistogram.png)
 
 ![HRV Histogram](plots/histogram/HRVHistogram.png)
 
-The histograms indicate that there are significant differences in the distributions of HR and HRV data among subjects.
+The charts below showing HR and HRV across time in the three different condition states show significant variance in HR and HRV among the different experiment states. However, we do see patterns in these values for each condition state, indicating that HR and HRV may have predictables ranges for the different states.
 
 ![HR for 4 subjects across time](plots/subjects/HRfor4subjects.png)
 
 ![HRV for 4 subjects across time](plots/subjects/HRVfor4subjects.png)
-
-The charts showing HR and HRV across time in the three different condition states show significant variance in HR and HRV among the different experiment states. However, we do see patterns in these values for each condition state, indicating that HR and HRV may have predictables ranges for the different states.
 
 In general, these charts highlight the fact that HR and HRV values can differ greatly for any given subject and creating a general model across participants is likely to be difficult.
 
