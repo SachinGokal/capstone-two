@@ -1,4 +1,4 @@
-## Stress Prediction from Heart Rate Variability
+## Predicting Stress from Heart Rate Variability Data
 
 This project was to explore whether heart rate variability data can predict stress. After seeing heart rate variability data being calculated by my fitness tracker, I was interested in interpreting the values and learned that HRV can be used as an indicator of a stressful state. HRV has an inverse relationship with stress in that low HRV can mean higher stress and higher HRV can indicate lower stress ([source](https://www.health.harvard.edu/blog/heart-rate-variability-new-way-track-well-2017112212789)). HRV can be measured as the variance in time between heartbeats for a specific interval. A more detailed definition can be found in this [resource](https://www.heartmath.org/research/science-of-the-heart/heart-rate-variability/).
 
